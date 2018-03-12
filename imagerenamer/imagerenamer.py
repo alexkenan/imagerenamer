@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.5
 #####################################
-#    LAST UPDATED     13 DEC 2017   #
+#    LAST UPDATED     12 MAR 2017   #
 #####################################
 """
 Renames photos to Year-Month-Day Hour.Minute.Second format
@@ -12,7 +12,7 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 
 
-def main_png(file: str):
+def main_png(file: str) -> None:
     """
     Used for PNG images with EXIF data
     :param file: Path to a photo to be renamed
@@ -31,11 +31,11 @@ def main_png(file: str):
     no_tags = before_time.replace('<photoshop:DateCreated>', '').replace('</photoshop:DateCreated>', '')
     name = no_tags.replace(':', '.').replace('T', ' ')
     name += '.png'
-    img.save(name)
+    img.save('/Volumes/MAC2/Photos/{}'.format(name))
     print('Saved {}'.format(name))
 
 
-def main_jpg(file: str):
+def main_jpg(file: str) -> None:
     """
     Used for JPG or JPEG images with Photo Month Day, Hour:Minute:Second format
     If it can't determine EXIF date data, it uses the file name to fill
@@ -55,12 +55,12 @@ def main_jpg(file: str):
             time = str(value)
     try:
         time_dt = datetime.datetime.strptime(time, '%Y:%m:%d %H:%M:%S')
-        name = '{0:%Y-%m-%d %H.%M.%S}.jpg'.format(time_dt)
+        name = '/Volumes/MAC2/Photos/{0:%Y-%m-%d %H.%M.%S}.jpg'.format(time_dt)
     except ValueError:
         print('Could not rename {} with the year'.format(file))
         filename = file.replace('Photo ', '').replace('.jpg', '')
         time_dt = datetime.datetime.strptime(filename, '%b %d, %H %M %S %p')
-        name = 'Y-{0:%m-%d %H.%M.%S}.jpg'.format(time_dt)
+        name = '/Volumes/MAC2/Photos/Y-{0:%m-%d %H.%M.%S}.jpg'.format(time_dt)
 
     image.save(name)
     print('Saved {}'.format(name))
@@ -68,23 +68,21 @@ def main_jpg(file: str):
 
 if __name__ == '__main__':
     print('-' * 10, 'Starting', '-' * 10)
-    yesno = input('Are photos to be renamed in /Volumes/MAC2/Photos/? (y/n) ')
-    yesno = yesno.lower()
-    if yesno == 'y':
-        os.chdir('/Volumes/MAC2/Photos/')
+    print('Looking in /Users/Alex/Dropbox/')
+    os.chdir('/Users/Alex/Dropbox/')
+
+    if os.path.exists('/Volumes/MAC2/Photos/'):
+        dirs = os.listdir(os.getcwd())
+        for pic in dirs:
+            if pic.startswith('Photo ') and pic.endswith('.jpg'):
+                main_jpg(pic)
+                os.unlink(pic)
+                print('Deleted {}'.format(pic))
+            elif 'IMG_' in pic and pic.endswith('.png'):
+                main_png(pic)
+                os.unlink(pic)
+                print('Deleted {}'.format(pic))
+
+        print('-'*10, 'Finished', '-'*10)
     else:
-        newpath = input('Type in the full path to the photos: ')
-        if os.path.exists(newpath):
-            os.chdir(path)
-        else:
-            while not os.path.exists(newpath):
-                newpath = input("Try again! ")
-
-    dirs = os.listdir(os.getcwd())
-    for pic in dirs:
-        if pic.startswith('Photo ') and pic.endswith('.jpg'):
-            main_jpg(pic)
-        elif 'IMG_' in pic and pic.endswith('.png'):
-            main_png(pic)
-
-    print('-'*10, 'Finished', '-'*10)
+        print('Plug in external drives!')
